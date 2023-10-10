@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Task Manager - Create Task</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            color: var(--tg-theme-text-color);
+            background: var(--tg-theme-secondary-bg-color);
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        :root {
+            --do-color: #c2c1c1;
+            --doing-color: #fbe991;
+            --done-color: #a0fb94;
+            --arrow-background: var(--tg-theme-bg-color) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23000" d="M2 0L0 2h4z" transform="rotate(180 2 1.5)"/></svg>') no-repeat right 10px center;
+        }
+
+        .dark {
+            --do-color: #a3a2a2;
+            --doing-color: #e2d139;
+            --done-color: #2a7c4f;
+            --arrow-background: var(--tg-theme-bg-color) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23FFF" d="M2 0L0 2h4z" transform="rotate(180 2 1.5)"/></svg>') no-repeat right 10px center;
+        }
+        .scrollable_content::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollable_content::-webkit-scrollbar {
+            width: 0;  
+            height: 0;
+        }
+        .scrollable_content {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+            max-height: 100vh;
+            overflow-y: auto;
+            margin: 0;
+            padding-top: 20px;
+            box-sizing: border-box;
+        }
+        .card {
+            background: var(--tg-theme-bg-color);
+            padding: 0;
+            width: calc(100% - 30px);
+            margin: auto;
+            border-radius: 15px;
+        }
+        .image-upload {
+            position: relative;
+            height: 200px;
+            background-color: var(--tg-theme-button-color);
+            border-radius: 15px 15px 0 0;
+            cursor: pointer;
+            background-size: cover;
+            background-position: top;
+            margin-bottom: 5px;
+        }
+        .status-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 7px;
+            width: 100%;
+            background-color: grey;
+        }
+        .input-group {
+            margin-bottom: 5px;
+        }
+        input[type="text"],
+        textarea {
+            color: #333;
+            font-family: 'Arial', sans-serif;
+            font-size: 14px;
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--tg-theme-button-color);
+            border-radius: 7px;
+            box-sizing: border-box;
+            resize: none;
+        }
+        textarea{
+            margin-bottom: -3px;
+        }
+        input[type="file"] {
+            border: none;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--tg-theme-button-color);
+            font-size: 14px;
+            border-radius: 7px; 
+            border: 1px solid var(--tg-theme-button-color);
+            appearance: none; 
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-color: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+            cursor: pointer; 
+        }
+        
+        @-moz-document url-prefix() {
+            select {
+                padding-right: 30px;
+                background: var(--arrow-background);
+                background-size: 10px;
+            }
+        }
+        select::-ms-expand {
+            display: none;
+        }
+
+        select {
+            background: var(--arrow-background);
+            background-position: right 15px bottom 15px;
+            background-size: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="scrollable_content">
+        <div class="card">
+            <div class="image-upload" id="imageUpload" onclick="document.getElementById('taskImage').click();">
+                <input type="file" id="taskImage" name="taskImage" accept="image/*" style="display:none;">
+                <div class="status-bar" id="statusBar"></div>
+            </div>
+            <div class="input-group">
+                <input type="text" id="taskTitle" name="taskTitle" placeholder="Task title">
+            </div>
+            <div class="input-group">
+                <textarea id="taskDescription" name="taskDescription" rows="5" placeholder="Task description"></textarea>
+            </div>
+            <div class="input-group">
+                <select class="select" id="taskStatus" name="taskStatus">
+                    <option value="do">To do</option>
+                    <option value="doing">Doing</option>
+                    <option value="done">Done</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <script>
+        let tg = window.Telegram.WebApp;
+        const titleInput = document.getElementById('taskTitle');
+        const descriptionInput = document.getElementById('taskDescription');
+        let lastViewportHeight = tg.viewportHeight;
+        var MainButton = tg.MainButton;
+        let buttonColor = getComputedStyle(document.documentElement).getPropertyValue('--tg-theme-button-color').trim();
+        MainButton.text = "Save";
+        MainButton.hide();
+        var BackButton = tg.BackButton;
+        BackButton.show();
+        BackButton.onClick(function() {
+            window.location.href = "/";
+            BackButton.hide();
+        });
+        function checkInputs() {
+            if (titleInput.value.trim()) {
+                MainButton.setParams({"color": buttonColor});
+                MainButton.enable();
+            } else {
+                MainButton.setParams({"color": "#e5e5e5"});
+                MainButton.disable();
+            }
+        }
+        function checkExpandedState() {
+            if (tg.isExpanded) {
+                MainButton.show();
+            } else {
+                MainButton.hide();
+            }
+        }
+
+        function checkViewportHeightChange() {
+            if (tg.viewportHeight !== lastViewportHeight) {
+                checkExpandedState();
+                lastViewportHeight = tg.viewportHeight; 
+            }
+            requestAnimationFrame(checkViewportHeightChange); 
+        }
+        MainButton.onClick(function() {
+            createTask();
+            });
+
+        checkExpandedState(); 
+        checkViewportHeightChange();
+        titleInput.addEventListener('input', checkInputs);
+        checkInputs();
+
+        function createTask() {
+            const tgId = tg.initDataUnsafe.user.id;
+            const taskTitle = document.getElementById('taskTitle').value.trim();
+            const taskDescription = document.getElementById('taskDescription').value.trim();
+            const taskStatus = document.getElementById('taskStatus').value;
+            const taskImage = document.getElementById('taskImage').files[0]; 
+            const formData = new FormData();
+            formData.append('tgId', tgId);
+            formData.append('taskTitle', taskTitle);
+            formData.append('taskDescription', taskDescription);
+            formData.append('taskStatus', taskStatus);
+            formData.append('taskImage', taskImage);
+
+            fetch('https://web-mikita.site/createTask', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    tg.showAlert("Save your taks!");
+                    window.location.href = "/";
+                } else {
+                    tg.showAlert("Something went wrong...");
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                tg.showAlert("Something went wrong...");
+            });
+        }
+        document.getElementById('taskStatus').addEventListener('change', function() {
+             const statusBar = document.getElementById('statusBar');
+             switch (this.value) {
+                 case 'do':
+                     statusBar.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--do-color').trim();
+                     break;
+                 case 'doing':
+                     statusBar.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--doing-color').trim();
+                     break;
+                 case 'done':
+                     statusBar.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--done-color').trim();
+                     break;
+             }
+         });
+         document.getElementById('taskImage').addEventListener('change', function() {
+             const file = this.files[0];
+             if (file) {
+                 // Проверка типа файла
+                 if (!file.type.startsWith('image/')) {
+                     tg.showAlert('Unsupported file type(');
+                     return;
+                 }
+
+                 const reader = new FileReader();
+
+                 // Обработка ошибок
+                 reader.onerror = function() {
+                     tg.showAlert('Something went wrong...');
+                 };
+
+                 reader.onload = function(e) {
+                     document.getElementById('imageUpload').style.backgroundImage = `url('${e.target.result}')`;
+                 };
+
+                 reader.readAsDataURL(file);
+             }
+         });
+        document.addEventListener('touchstart', function(e) {
+        if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+            if (!e.target.isEqualNode(document.activeElement)) {
+                document.activeElement.blur();
+            }
+        }
+    }, false);
+    </script>
+</body>
+</html>

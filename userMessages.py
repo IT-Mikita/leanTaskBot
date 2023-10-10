@@ -1,0 +1,1 @@
+welcome  = "<b>Welcome to LeanTaskBot!</b>\nSimple Kanban style Mini Apps for managing work processes\n\n✅ Easy to use\n✅ Telegram environment \n\n✅ Kanban style\n\n🚀 Future improvements:\n- Setting a task through message forwarding"

@@ -1,0 +1,2 @@
+botToken = ''
+dbFilename = 'database.db'

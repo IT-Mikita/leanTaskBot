@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Task Manager - Task</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        function setThemeClass() {
+            document.documentElement.className = Telegram.WebApp.colorScheme;
+        }
+        Telegram.WebApp.onEvent('themeChanged', setThemeClass);
+        setThemeClass();
+    </script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            color: var(--tg-theme-text-color);
+            background: var(--tg-theme-secondary-bg-color);
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+
+        }
+        :root {
+            --do-color: #c2c1c1;
+            --doing-color: #fbe991;
+            --done-color: #a0fb94;
+            --arrow-background: var(--tg-theme-bg-color) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23000" d="M2 0L0 2h4z" transform="rotate(180 2 1.5)"/></svg>') no-repeat right 10px center;
+        }
+        .dark {
+            --do-color: #a3a2a2;
+            --doing-color: #e2d139;
+            --done-color: #2a7c4f;
+            --arrow-background: var(--tg-theme-bg-color) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23FFF" d="M2 0L0 2h4z" transform="rotate(180 2 1.5)"/></svg>') no-repeat right 10px center;
+        }
+        .scrollable_content::-webkit-scrollbar {
+            display: none;
+            width: 0;  /* Убираем вертикальный скролл */
+            height: 0; /* Убираем горизонтальный скролл */
+        }
+        .scrollable_content {
+            -ms-overflow-style: none;  /* IE и Edge */
+            scrollbar-width: none;  /* Firefox */
+            max-height: 100vh;
+            overflow-y: auto;
+            margin: 0;
+            padding-top: 80px;
+            box-sizing: border-box;
+        }
+        header {
+            display: flex;
+            padding: 10px 20px 10px 20px;
+            background: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+            justify-content: space-between;
+            align-items: center;
+            border-bottom-left-radius: 15px;
+            border-bottom-right-radius: 15px;
+            position: fixed;
+            top: 0;
+            width: calc(100% - 40px);
+            z-index: 10;
+        }
+        .profile {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+        .profile_avatar img {
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            margin-right: 5px;
+        }
+        .profile_detail {
+            align-items: center; /* Центрируем элементы по вертикали */
+        }
+        .profile_namebox{
+            display: flex;
+        }
+        .profile_name {
+            color: var(--tg-theme-text-color);
+            font-weight: bold;
+            margin-bottom: 0;
+        }
+        .mode_box {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        .mode_box svg{
+            color: var(--tg-theme-text-color);
+            transform: rotate(90deg);
+            width: 15px;
+            margin-left:5px;
+        }
+        .switchMode {
+            display: none;
+            position: absolute;
+            right: 0px;
+            top: 55px;
+            padding: 15px 20px 15px 20px;
+            background: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+            border-bottom-left-radius: 15px;
+            border-bottom-right-radius: 15px;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+            z-index: 11;
+        }
+        .card {
+            background: var(--tg-theme-bg-color);
+            padding: 0;
+            width: calc(100% - 30px);
+            margin: auto;
+            border-radius: 15px;
+        }
+        .image-upload {
+            position: relative;
+            height: 200px;
+            background-color: var(--tg-theme-button-color);
+            border-radius: 15px 15px 0 0;
+            background-size: cover;
+            background-position: top;
+            margin-bottom: 10px;
+        }
+        .status-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 7px;
+            width: 100%;
+            background-color: grey;
+        }
+        .input-group {
+            margin-bottom: 10px;
+        }
+        input[readonly], textarea[readonly] {
+            color: #333;
+            font-family: 'Arial', sans-serif;
+            font-size: 16px;
+            width: 100%;
+            padding: 10px;
+            background-color: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+            border: 1px solid var(--tg-theme-button-color);
+            border-radius: 7px;
+            box-sizing: border-box;
+            resize: none;
+        }
+        select:disabled {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--tg-theme-button-color);
+            font-size: 14px;
+            border-radius: 7px; /* Скругленные углы */
+            border: 1px solid var(--tg-theme-button-color);
+            appearance: none; /* Убираем стандартные стили select в некоторых браузерах */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-color: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+            cursor: default;
+        }
+        /* Стили для стрелки выпадающего списка в Firefox */
+        @-moz-document url-prefix() {
+            select {
+                background-size: 0px;
+            }
+        }
+        /* Стили для стрелки выпадающего списка в остальных браузерах */
+        select::-ms-expand {
+            display: none; /* Убираем стандартную стрелку в IE/Edge */
+        }
+        select:disabled {
+            background-size: 0px;
+        }
+        .delete-button {
+            display: inline-block;
+            padding: 5px 20px;
+            background-color: rgb(155, 27, 27);
+            color: white;
+            text-align: center;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+            cursor:pointer;
+            /* Центрирование кнопки в родительском элементе */
+            margin: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .delete-button:hover {
+            background-color: rgb(93, 0, 0);
+        }
+    </style>
+</head>
+<body>
+    <div class="scrollable_content">
+        <header>
+            <a class="profile">
+                <div class="profile_avatar">
+                    <img src="" alt="profile_avatar">
+                </div>
+                <div class="profile_detail">
+                    <div class="profile_namebox">
+                        <div class="profile_name" id="profile_name"> </div>
+                    </div>
+                </div>
+            </a>
+            <div class="mode_box" id="modeName">
+                <span>My tasks</span>
+                <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="m7.5 5 5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            </div>
+        </header>
+        <div class="switchMode" id="switchMode">
+            <span>Team Tasks</span>
+        </div>
+        <div class="card">
+            <div class="image-upload" id="imageUpload">
+                <div class="status-bar" id="statusBar"></div>
+            </div>
+            <div class="input-group">
+                <input type="text" id="taskTitle" name="taskTitle" placeholder="Название задачи" readonly>
+            </div>
+            <div class="input-group">
+                <textarea id="taskDescription" name="taskDescription" rows="5" placeholder="Описание задачи" readonly></textarea>
+            </div>
+            <div class="input-group">
+                <select class="select" id="taskStatus" name="taskStatus" disabled>
+                    <option value="do">To do</option>
+                    <option value="doing">Doing</option>
+                    <option value="done">Done</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <a href="#" class="delete-button">Delete</a>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let tg = window.Telegram.WebApp;
+            document.getElementById("profile_name").innerText = `${tg.initDataUnsafe.user.first_name}`;
+
+            let lastViewportHeight = tg.viewportHeight;
+
+            var MainButton = tg.MainButton;
+            MainButton.text = "Edit";
+            MainButton.hide();
+
+            var BackButton = tg.BackButton;
+                BackButton.show();
+                BackButton.onClick(function() {
+                    window.location.href = "/";
+                    BackButton.hide();
+                });
+
+            function checkExpandedState() {
+                if (tg.isExpanded) {
+                    MainButton.show();
+                    // Ваш код для обработки расширенного окна
+                } else {
+                    MainButton.hide();
+                    // Ваш код для обработки не расширенного окна
+                }
+            }
+            function checkViewportHeightChange() {
+                if (tg.viewportHeight !== lastViewportHeight) {
+                    // Если высота области просмотра изменилась, проверяем состояние расширения
+                    checkExpandedState();
+                    lastViewportHeight = tg.viewportHeight; // Обновляем сохраненное значение высоты области просмотра
+                }
+                requestAnimationFrame(checkViewportHeightChange); // Повторно вызываем функцию на следующем кадре анимации
+            }
+            MainButton.onClick(function() {
+                window.location.href = "/";
+                });
+
+            checkExpandedState(); // Проверяем состояние расширения при загрузке страницы
+            checkViewportHeightChange();
+
+            const modeName = document.getElementById("modeName");
+            const switchMode = document.getElementById("switchMode");
+            modeName.addEventListener("click", () => {
+                if (switchMode.style.display === "block") {
+                    switchMode.style.display = "none";
+                } else {
+                    switchMode.style.display = "block";
+                }
+            });
+
+            let tgId = tg.initDataUnsafe.user.id;
+            let taskId = "{{ task_id }}";
+            fetch('https://web-mikita.site/getUserTaskData', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({tgId: tgId,taskId:taskId})
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Заполняем информацию профиля
+                document.querySelector(".profile_avatar img").src = data.user.userPhoto;
+
+                // Заполняем информацию задачи
+                document.getElementById("taskTitle").value = data.task.taskName;
+                document.getElementById("taskDescription").value = data.task.taskDesc;
+                if (data.task.taskPhoto) {
+                    const imageUpload = document.getElementById("imageUpload");
+                    imageUpload.style.backgroundImage = `url(${data.task.taskPhoto})`;
+                }
+
+                // Установка статуса задачи
+                let statusBar = document.getElementById("statusBar");
+                let selectElement = document.getElementById("taskStatus");
+                selectElement.value = data.task.taskStatus;
+
+                // Установка цвета statusBar на основе статуса
+                switch (data.task.taskStatus) {
+                    case 'do':
+                        statusBar.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--do-color').trim();
+                        break;
+                    case 'doing':
+                        statusBar.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--doing-color').trim();
+                        break;
+                    case 'done':
+                        statusBar.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--done-color').trim();
+                        break;
+                }
+            })
+            .catch((error) => {
+                document.querySelector(".profile_avatar img").src = "https://ih1.redbubble.net/image.1015554729.8766/st,small,507x507-pad,600x600,f8f8f8.jpg";
+                console.error('Error:', error);
+            });
+            const deleteButton = document.querySelector('.delete-button');
+            deleteButton.addEventListener('click', function(event) {
+                event.preventDefault(); // предотвращаем действие по умолчанию (переход по ссылке)
+                let tgId = window.Telegram.WebApp.initDataUnsafe.user.id;
+                let taskId = "{{ task_id }}"; // Предполагаем, что у вас уже есть этот ID
+                deleteUserTask(tgId, taskId);
+            });
+        function deleteUserTask(tgId, taskId) {
+            fetch('https://web-mikita.site/deleteUserTask', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({tgId: tgId,taskId:taskId})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    tg.showAlert("Deleted your task");
+                    window.location.href = "/";
+                } else {
+                    tg.showAlert("Something went wrong...");
+                }
+                console.log(data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+    });
+    </script>
+</body>
+</html>

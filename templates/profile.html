@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Task Manager - Profile</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        function setThemeClass() {
+            document.documentElement.className = Telegram.WebApp.colorScheme;
+        }
+        Telegram.WebApp.onEvent('themeChanged', setThemeClass);
+        setThemeClass();
+    </script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            color: var(--tg-theme-text-color);
+            background: var(--tg-theme-secondary-bg-color);
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+
+        }
+        .scrollable_content::-webkit-scrollbar {
+            display: none;
+            width: 0;  /* Убираем вертикальный скролл */
+            height: 0; /* Убираем горизонтальный скролл */
+        }
+        .scrollable_content {
+            -ms-overflow-style: none;  /* IE и Edge */
+            scrollbar-width: none;  /* Firefox */
+            max-height: 100vh;
+            overflow-y: auto;
+            margin: 0;
+            padding-top: 20px;
+            box-sizing: border-box;
+        }
+        .profile_card {
+            background: var(--tg-theme-secondary-bg-color);
+            padding: 0;
+            width: calc(100% - 30px);
+            margin: auto;
+            border-radius: 15px;
+            text-align: center;
+        }
+        .profile_image {
+            width: 105px;
+            height: 105px;
+            border-radius: 50%;
+            margin-bottom: 15px;
+        }
+        .profile_name {
+            font-size: 30px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            background-image: linear-gradient(to right, blue, darkorange, red, blue, darkorange, red);
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+        .info_block, .theme_block {
+            border-radius: 15px;
+            background-color: var(--tg-theme-bg-color);
+            padding: 10px;
+            margin: 10px 0;
+            text-align: left;
+        }
+        .info_block p, .theme_block p {
+            font-size: 19px;
+            margin: 15px -5px 15px 5px;
+        }
+        .highlight{
+            color: var(--tg-theme-button-color);
+            margin-right: 5px;
+            font-weight: bold;
+            font-size: 21px;
+        }
+        .theme_block ul {
+            list-style-type: none; /* Убираем маркеры списка */
+            padding-left: 22px; /* Убираем отступ слева */
+            margin-top: 0; /* Убираем отступ сверху */
+        }
+        #job_name{
+            margin-left: -5px;
+        }
+        .theme_block li {
+            margin-bottom: 10px; /* Увеличиваем отступ между элементами списка */
+        }
+    </style>
+</head>
+<body>
+    <div class="scrollable_content">
+        <div class="profile_card">
+            <img class="profile_image" src="" alt="profile_avatar">
+            <div class="profile_name" id="profile_name"></div>
+            <div class="info_block">
+                <p><span class="highlight">Team:</span><span id="team_name"></span></p>
+                <p><span class="highlight">Post: </span><span id="user_pos"></span></p>
+            </div>
+            <div class="theme_block">
+                <p><span class="highlight">Available topics: </span></p>
+                <ul>
+                    <li>Warehouses</li>
+                    <li>Sales</li>
+                    <li>Purchases</li>
+                    <li>Finance</li>
+                    <li>Marketing</li>
+                    <li>Customer Support</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let tg = window.Telegram.WebApp;
+            document.getElementById("profile_name").innerText = `${tg.initDataUnsafe.user.first_name}`;
+            var BackButton = tg.BackButton;
+            BackButton.show();
+            BackButton.onClick(function() {
+                window.location.href = "/team";
+                BackButton.hide();
+            });
+
+            let tgId = tg.initDataUnsafe.user.id;
+            fetch('https://web-mikita.site/getUserData', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({tgId: tgId})
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.querySelector(".profile_image").src = data.user.userPhoto;
+                document.getElementById("team_name").innerText = data.team.name;
+                document.getElementById("user_pos").innerText = data.user.userPos;
+
+            })
+            .catch((error) => {
+                document.querySelector(".profile_image").src = "https://ih1.redbubble.net/image.1015554729.8766/st,small,507x507-pad,600x600,f8f8f8.jpg";
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</body>
+</html>

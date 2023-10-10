@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Task Manger</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://unpkg.com/dragula/dist/dragula.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/dragula/dist/dragula.min.css">
+    <script>
+        function setThemeClass() {
+            document.documentElement.className = Telegram.WebApp.colorScheme;
+        }
+        Telegram.WebApp.onEvent('themeChanged', setThemeClass);
+        setThemeClass();
+    </script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            color: var(--tg-theme-text-color);
+            background: var(--tg-theme-secondary-bg-color);
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+
+        }
+        :root {
+            --do-color: #e5e4e4;
+            --doing-color: #fff9db;
+            --done-color: #dbffd6;
+            --arrow-background: var(--tg-theme-bg-color) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23000" d="M2 0L0 2h4z" transform="rotate(180 2 1.5)"/></svg>') no-repeat right 10px center;
+        }
+        .dark {
+            --do-color: #d3d3d3;
+            --doing-color: #f0e68c;
+            --done-color: #3cb371;
+            --arrow-background: var(--tg-theme-bg-color) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23FFF" d="M2 0L0 2h4z" transform="rotate(180 2 1.5)"/></svg>') no-repeat right 10px center;
+        }
+        .scrollable_content::-webkit-scrollbar {
+            display: none;
+            width: 0;  /* Убираем вертикальный скролл */
+            height: 0; /* Убираем горизонтальный скролл */
+        }
+        .scrollable_content {
+            -ms-overflow-style: none;  /* IE и Edge */
+            scrollbar-width: none;  /* Firefox */
+            max-height: 100vh;
+            overflow-y: auto;
+            margin: 0;
+            padding-top: 80px;
+            box-sizing: border-box;
+        }
+        header {
+            display: flex;
+            padding: 10px 20px 10px 20px;
+            background: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+            justify-content: space-between;
+            align-items: center;
+            border-bottom-left-radius: 15px;
+            border-bottom-right-radius: 15px;
+            position: fixed;
+            top: 0;
+            width: calc(100% - 40px);
+            z-index: 10;
+        }
+        .profile {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+        .profile_avatar img {
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            margin-right: 5px;
+        }
+        .profile_detail {
+            align-items: center; /* Центрируем элементы по вертикали */
+        }
+        .profile_namebox{
+            display: flex;
+        }
+        .profile_name {
+            color: var(--tg-theme-text-color);
+            font-weight: bold;
+            margin-bottom: 0;
+        }
+        .profile_detail svg{
+            color: var(--tg-theme-text-color);
+            width: 15px;
+        }
+        .profile_pos {
+            background: var(--tg-theme-text-color);
+            color: var(--tg-theme-bg-color);
+            padding: 3px 5px 3px 5px;
+            margin: 5px 0;
+            border-radius: 15px;
+            font-size: 12px;
+            text-align: center;
+        }
+        .mode_box {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        .mode_box svg{
+            color: var(--tg-theme-text-color);
+            transform: rotate(90deg);
+            width: 15px;
+            margin-left:5px;
+        }
+        .switchMode {
+            display: none;
+            position: absolute;
+            right: 0px;
+            top: 55px;
+            padding: 15px 20px 15px 20px;
+            background: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+            border-bottom-left-radius: 15px;
+            border-bottom-right-radius: 15px;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+            z-index: 11;
+        }
+        main {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+        }
+        .title {
+            margin-bottom: -10px;
+            margin-left: 20px;
+        }
+        .tile {
+            background: var(--tg-theme-bg-color);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 10px;
+            text-align: center;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+            width: calc(40% - 40px);
+            height: 100px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+        }
+        .tile a {
+            color: var(--tg-theme-text-color);  /* Цвет текста ссылки */
+            text-decoration: none;  /* Убираем подчеркивание */
+            display: block;  /* Делаем ссылку блочным элементом */
+            width: 100%;  /* Занимаем всю ширину родительского элемента */
+        }
+    </style>
+</head>
+<body>
+    <div class="scrollable_content">
+        <header>
+            <a class="profile" href="/profile">
+                <div class="profile_avatar">
+                    <img src="" alt="profile_avatar">
+                </div>
+                <div class="profile_detail">
+                    <div class="profile_namebox">
+                        <div class="profile_name" id="profile_name"> </div>
+                        <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="m7.5 5 5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                    </div>
+                    <div id="profile_pos" class="profile_pos"></div>
+                </div>
+            </a>
+            <div class="mode_box" id="modeName">
+                <span id="teamName"></span>
+                <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="m7.5 5 5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            </div>
+        </header>
+        <div class="switchMode" id="switchMode">
+            <span>My tasks</span>
+        </div>
+        <div class="title"><h1>Topics:</h1></div>
+    <main>
+        <div class="tile"><a href="/kanban">Warehouses</a></div>
+        <div class="tile"><a href="/kanban">Sales</a></div>
+        <div class="tile"><a href="/kanban">Purchases</a></div>
+        <div class="tile"><a href="/kanban">Finance</a></div>
+        <div class="tile"><a href="/kanban">Marketing</a></div>
+        <div class="tile"><a href="/kanban">Customer Support</a></div>
+    </main>
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let tg = window.Telegram.WebApp;
+            document.getElementById("profile_name").innerText = `${tg.initDataUnsafe.user.first_name}`;
+            // Добавленный код для запроса к серверу Flask
+            document.getElementById("switchMode").addEventListener("click", function() {
+                window.location.href = "/";
+            });
+            let tgId = tg.initDataUnsafe.user.id;
+            fetch('https://web-mikita.site/getUserData', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({tgId: tgId})
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.querySelector(".profile_avatar img").src = data.user.userPhoto;
+                document.getElementById("profile_pos").innerText = data.user.userPos;
+                document.getElementById("teamName").innerText = data.team.name;
+            })
+            .catch((error) => {
+                document.querySelector(".profile_avatar img").src = "https://ih1.redbubble.net/image.1015554729.8766/st,small,507x507-pad,600x600,f8f8f8.jpg";
+                console.error('Error:', error);
+            });
+            const modeName = document.getElementById("modeName");
+            const switchMode = document.getElementById("switchMode");
+            modeName.addEventListener("click", () => {
+                if (switchMode.style.display === "block") {
+                    switchMode.style.display = "none";
+                } else {
+                    switchMode.style.display = "block";
+                }
+            });
+        });
+    </script>
+</body>
+</html>
