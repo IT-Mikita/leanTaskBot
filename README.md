@@ -1,6 +1,6 @@
 # leanTaskBot
 Welcome to LeanTaskBot!  Simple Kanban style Mini Apps for managing work processes  
-✅ Easy to use  ✅ Telegram environment   ✅ Kanban style   
+✅ Easy to use ✅ Telegram environment ✅ Kanban style   
 
 🚀 Future improvements:
 - Setting a task through message forwarding
@@ -47,9 +47,28 @@ python myapp.py
 
 ## Usage
 
-Detail on how to use the application, any available endpoints, commands, or user interfaces.
+Overview
+This Telegram Mini App serves as a foundation for developers interested in creating their own Telegram Mini Apps. Designed with ease-of-use and adaptability in mind, it offers basic functionalities that can be expanded upon based on individual requirements.
 
-Ensure that you comprehensively list all potential errors and exceptions that can occur during the usage of your app.
+Endpoints:
+Home (/): Displays the home page of the app.
+
+Team (/team): Showcases the team page where all members are listed.
+
+Profile (/profile): User's profile page, displaying relevant user details and associated tasks.
+
+Create Task (/createTask): A form page where users can create new tasks, filling out required details.
+
+Commands:
+/start: Starts the bot and provides a welcome message to the user.
+User Interface:
+Navigation Bar: Allows users to swiftly navigate between different sections of the app.
+
+Task Creation Form: Provides fields for task details such as title, description, status, and an image upload option.
+
+Profile Display: Shows the user's photo, username, and a list of their tasks.
+
+To fully harness the capabilities of this Mini App, developers can integrate additional functionalities such as task editing, user authentication, or even a chatbot interface
 
 ## Contributing
 
